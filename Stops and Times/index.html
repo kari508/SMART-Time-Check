@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transit Stop Scheduler</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Input Transit Stop and Schedule</h1>
+  <form action="/submit-schedule" method="post">
+    <label for="stop-name">Stop Name:</label>
+    <input type="text" id="stop-name" name="stop_name" required><br><br>
+
+    <label for="time">Scheduled Time:</label>
+    <input type="time" id="time" name="time" required><br><br>
+
+    <label for="route">Route:</label>
+    <input type="text" id="route" name="route" required><br><br>
+
+    <button type="submit">Submit</button>
+  </form>
+</body>
+</html>
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+  }
+  
+  form {
+    max-width: 400px;
+    margin: auto;
+  }
+  
+  label {
+    display: block;
+    margin-bottom: 5px;
+  }
+  
+  input, button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+  }
+  
+  button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  
+  button:hover {
+    background-color: #45a049;
+  }
+  start index.html
+  <form onsubmit="handleForm(event)">
+
+    <script>
+        function handleForm(event) {
+          event.preventDefault(); // Prevents the form from submitting
+          const stopName = document.getElementById('stop-name').value;
+          const time = document.getElementById('time').value;
+          const route = document.getElementById('route').value;
+          console.log(`Stop: ${stopName}, Time: ${time}, Route: ${route}`);
+          alert(`Stop: ${stopName}, Time: ${time}, Route: ${route}`);
+        }
+      </script>
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Transit Stop Scheduler</title>
+        <link rel="stylesheet" href="styles.css">
+      </head>
+      <body>
+        <h1>Input Transit Stop and Schedule</h1>
+        <form id="stopForm" onsubmit="handleForm(event)">
+          <label for="stop-name">Stop Name:</label>
+          <input type="text" id="stop-name" name="stop_name" required><br><br>
+      
+          <label for="time">Scheduled Time:</label>
+          <input type="time" id="time" name="time" required><br><br>
+      
+          <label for="route">Route:</label>
+          <input type="text" id="route" name="route" required><br><br>
+      
+          <button type="submit">Submit</button>
+        </form>
+      
+        <h2>Scheduled Stops</h2>
+        <ul id="stopList"></ul>
+      
+        <script>
+          function handleForm(event) {
+            event.preventDefault(); // Prevents the form from submitting
+            
+            const stopName = document.getElementById('stop-name').value;
+            const time = document.getElementById('time').value;
+            const route = document.getElementById('route').value;
+            
+            // Create a stop object
+            const stop = {
+              name: stopName,
+              time: time,
+              route: route
+            };
+      
+            // Get existing stops from local storage, or initialize an empty array if none exist
+            let stops = JSON.parse(localStorage.getItem('stops')) || [];
+      
+            // Add the new stop to the array
+            stops.push(stop);
+      
+            // Save the updated stops array back to local storage
+            localStorage.setItem('stops', JSON.stringify(stops));
+      
+            // Clear the form inputs
+            document.getElementById('stop-name').value = '';
+            document.getElementById('time').value = '';
+            document.getElementById('route').value = '';
+      
+            // Update the display
+            displayStops();
+          }
+      
+          // Function to display stops from local storage
+          function displayStops() {
+            const stopList = document.getElementById('stopList');
+            stopList.innerHTML = '';  // Clear the existing list
+      
+            // Get the stops from local storage
+            const stops = JSON.parse(localStorage.getItem('stops')) || [];
+      
+            // Loop through the stops and display them
+            stops.forEach(function(stop, index) {
+              const listItem = document.createElement('li');
+              listItem.textContent = `${stop.name} at ${stop.time} on route ${stop.route}`;
+              stopList.appendChild(listItem);
+            });
+          }
+      
+          // Display the stops when the page loads
+          window.onload = displayStops;
+        </script>
+      </body>
+      </html>
+      <form id="stopForm" onsubmit="handleForm(event)">
+        <!-- Existing input fields... -->
+    
+        <label for="file-upload">Import Stops from Excel:</label>
+        <input type="file" id="file-upload" accept=".xls,.xlsx"><br><br>
+    </form>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    document.getElementById('file-upload').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        
+        if (!file) {
+            alert("Please upload a file");
+            return;
+        }
+    
+        const reader = new FileReader();
+    
+        document.getElementById('file-upload').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            
+            if (!file) {
+                alert("Please upload a file");
+                return;
+            }
+        
+            const reader = new FileReader();
+        
+            reader.onload = function(event) {
+                const data = new Uint8Array(event.target.result);
+                const workbook = XLSX.read(data, { type: "array" });
+        
+                // Assuming the first sheet has the data
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        
+                // Convert the sheet data into JSON format (array of arrays)
+                const stops = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+        
+                // Process each row (Skip header row, assuming first row contains headers)
+                stops.forEach(function(row, index) {
+                    if (index > 0 && row.length > 0) {  // Skip header row
+                        const stop = {
+                            name: row[0],  // Stop Name
+                            time: row[1],  // Time
+                            route: row[2]  // Route (A or B)
+                        };
+        
+                        // Store the stop in local storage
+                        let storedStops = JSON.parse(localStorage.getItem('stops')) || [];
+                        storedStops.push(stop);
+                        localStorage.setItem('stops', JSON.stringify(storedStops));
+                    }
+                });
+        
+                // Display updated stops
+                displayStops();
+            };
+        
+            reader.readAsArrayBuffer(file);
+        });
+        
+        // Function to display stops from local storage (same as before)
+        function displayStops() {
+            const stopList = document.getElementById('stopList');
+            stopList.innerHTML = '';  // Clear the existing list
+        
+            // Get the stops from local storage
+            const stops = JSON.parse(localStorage.getItem('stops')) || [];
+        
+            // Loop through the stops and display them
+            stops.forEach(function(stop, index) {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${stop.name} at ${stop.time} on route ${stop.route}`;
+                stopList.appendChild(listItem);
+            });
+        }
+        function scheduleNotifications() {
+            const stops = JSON.parse(localStorage.getItem('stops')) || [];
+        
+            stops.forEach(function(stop) {
+                // Convert the stop's time into a Date object
+                const stopTime = new Date();
+                const [hours, minutes] = stop.time.split(':');
+                stopTime.setHours(hours, minutes, 0, 0);
+        
+                const now = new Date();
+                const timeUntilLeave = stopTime - now;
+        
+                if (timeUntilLeave > 0) {  // Ensure the stop time is in the future
+                    setTimeout(function() {
+                        sendNotification(stop.name);
+                    }, timeUntilLeave);
+                }
+            });
+        }
+        
+        function sendNotification(stopName) {
+            if (Notification.permission === "granted") {
+                new Notification(`You can leave ${stopName}`);
+                const audio = new Audio('ping.mp3');  // Play a sound notification
+                audio.play();
+            }
+        }
+        
+        // Request permission for notifications when the page loads
+        window.onload = function() {
+            if (Notification.permission !== "granted") {
+                Notification.requestPermission();
+            }
+            
+            displayStops();  // Display the stops on the page
+            scheduleNotifications();  // Schedule the notifications
+        };
+        const audio = new Audio('sounds/ping.mp3');  // Play the sound from the assets folder
+             
+
